@@ -5,23 +5,85 @@
  */
 package JFrame;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
 
 /**
  *
  * @author Pedro
  */
 public class Upload extends javax.swing.JFrame {
-
-    /**
-     * Creates new form Upload
-     */
+    //Path do arquivo selecionado, será utilizado no Browse e Send
+    private String str;
+    
+    private String server = "localhost";
+    private int port = 21;
+    private String user = "User1";
+    private String pass = "123123";
+    
     public Upload() {
 	initComponents();
     }
+    
+    Path path;
+    String fileName;
+    
+    public void FileSelectMethod() {
+	// OnAction Botão FileChooser
+	JFileChooser fileChooser = new JFileChooser();
+	fileChooser.setDialogTitle("Procurar arquivo");
+	
+	// Filtragem FileChooser
+	fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	FileNameExtensionFilter filter = new FileNameExtensionFilter("PDF Documents", "pdf");
+	fileChooser.setFileFilter(filter);	
 
+	// Após seleção correta, mostrar Path na txtFile
+	int retorno = fileChooser.showOpenDialog(this);
+	
+	if (retorno == JFileChooser.APPROVE_OPTION) {
+	    
+	    str = fileChooser.getSelectedFile().getAbsolutePath();
+	    txtFile.setText(str);
+	    
+	    // Pegar arquivo enviado com nome original, trabalhar com 'fileName' no proximo metodo
+	    path = Paths.get(str);
+	    fileName = path.getFileName().toString();
+	}
+	
+    }
+    
+
+    public void Send () throws IOException {
+
+	// Conectar com o servidor
+	FTPClient ftpClient = new FTPClient();
+	
+	ftpClient.connect(server, port);
+	ftpClient.login(user, pass);
+	ftpClient.enterLocalPassiveMode();
+        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+	
+	//Pegar arquivo fileChooser ("str") e enviar por imputStream
+	InputStream inputStream = new FileInputStream(str);
+
+	txtResult.setText("Sending file... ");
+	boolean done = ftpClient.storeFile(fileName, inputStream);
+	inputStream.close();
+	if (done) {
+	    txtResult.setText ( txtResult.getText() + "  file uploaded!");
+	}
+    }
+   
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -34,9 +96,11 @@ public class Upload extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         btnFileChooser = new javax.swing.JButton();
         txtFile = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        btnSend = new javax.swing.JButton();
+        txtResult = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(255, 255, 255));
 
         jLabel1.setFont(new java.awt.Font("Times New Roman", 1, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -49,7 +113,16 @@ public class Upload extends javax.swing.JFrame {
             }
         });
 
-        jButton1.setText("Enviar");
+        txtFile.setEditable(false);
+
+        btnSend.setText("Enviar");
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSendActionPerformed(evt);
+            }
+        });
+
+        txtResult.setEditable(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -57,29 +130,38 @@ public class Upload extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 158, Short.MAX_VALUE)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(159, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnFileChooser)
-                        .addGap(20, 20, 20)
-                        .addComponent(txtFile, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtResult)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(btnFileChooser)
+                                .addGap(20, 20, 20)
+                                .addComponent(txtFile, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addContainerGap())))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1)
+                .addComponent(btnSend)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(15, Short.MAX_VALUE)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnFileChooser)
                     .addComponent(txtFile, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
-                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(txtResult, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(btnSend)
                 .addContainerGap())
         );
 
@@ -87,26 +169,17 @@ public class Upload extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnFileChooserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFileChooserActionPerformed
-	// OnAction Botão FileChooser
-	JFileChooser fileChooser = new JFileChooser();
-	fileChooser.setDialogTitle("Procurar arquivo");
+	FileSelectMethod();
 	
-	// Filtragem FileChooser
-	fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-	
-	FileNameExtensionFilter filter = new FileNameExtensionFilter("PDF Documents", "pdf");
-	
-	fileChooser.setFileFilter(filter);
-	
-	//Após seleção correta, mostrar Path na txtFile
-	int retorno = fileChooser.showOpenDialog(this);
-	
-	if (retorno == JFileChooser.APPROVE_OPTION) {
-	    
-	    File file = fileChooser.getSelectedFile();
-	    txtFile.setText(file.getPath());
-	}
     }//GEN-LAST:event_btnFileChooserActionPerformed
+
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
+	try {
+	    Send();
+	} catch (IOException ex) {
+	    Logger.getLogger(Upload.class.getName()).log(Level.SEVERE, null, ex);
+	}
+    }//GEN-LAST:event_btnSendActionPerformed
 
     /**
      * @param args the command line arguments
@@ -145,8 +218,9 @@ public class Upload extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnFileChooser;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton btnSend;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField txtFile;
+    private javax.swing.JTextField txtResult;
     // End of variables declaration//GEN-END:variables
 }
