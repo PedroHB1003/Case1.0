@@ -12,7 +12,6 @@ I also did some diagrams (with <a href="https://www.lucidchart.com/">LucidChart!
 Project's development list:
 - [ ] Create a complete list
 - [X] Finish GUI (Graphical User Interface)!
-- [ ] Finish Client-side!
-- [ ] Finish Server-side!
-  - [ ] Connect one-another!
+- [X] Finish a functional Client (not so pretty) to Upload and Download files to/from a CompleteFTP Server
+    - [ ] Work on a prettier Client (use JavaFx.SceneBuilder)
 - [ ] Survive skynet
